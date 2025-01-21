@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import sympy as sp
-from sympy import symbols, integrate, sympify, exp
+from sympy import symbols, integrate, sympify, exp, latex
 import os
 import logging
 import sys
@@ -30,10 +30,15 @@ class IntegralSolver:
             expression = sp.sympify(expression_str)
             result = sp.integrate(expression, self.x)
             
+            # Generate solution steps
+            steps = self._generate_steps(expression, result)
+            
             return {
                 "success": True,
                 "input": f"∫ {expression} dx",
+                "steps": steps,
                 "result": f"{result} + C",
+                "latex_result": f"{latex(result)} + C",
                 "method": self._determine_integration_method(expression_str)
             }
         except Exception as e:
@@ -42,6 +47,33 @@ class IntegralSolver:
                 "success": False,
                 "error": f"Error: {str(e)}"
             }
+
+    def _generate_steps(self, expression, result):
+        steps = []
+        
+        # For sum of terms
+        if isinstance(expression, sp.Add):
+            steps.append("Using sum rule: ∫(f(x) + g(x))dx = ∫f(x)dx + ∫g(x)dx")
+            for term in expression.args:
+                term_result = sp.integrate(term, self.x)
+                if term.is_number:
+                    steps.append(f"∫{term}dx = {term}x (Constant rule)")
+                elif term.is_Pow and self.x in term.free_symbols:
+                    base, exp = term.args
+                    if base == self.x:
+                        steps.append(f"∫x^{exp}dx = x^{exp+1}/{exp+1} (Power rule)")
+                
+        # For single term
+        else:
+            if expression.is_number:
+                steps.append(f"Using constant rule: ∫kdx = kx")
+            elif expression.is_Pow and self.x in expression.free_symbols:
+                base, exp = expression.args
+                if base == self.x:
+                    steps.append(f"Using power rule: ∫x^ndx = x^(n+1)/(n+1)")
+        
+        steps.append(f"Final result: {result} + C")
+        return steps
 
     def _preprocess_expression(self, expr):
         expr = expr.replace('^', '**')
@@ -52,18 +84,25 @@ class IntegralSolver:
 
     def _determine_integration_method(self, expr):
         expr = expr.lower()
-        if '*' in expr and ('sin' in expr or 'cos' in expr or 'exp' in expr or 'log' in expr):
-            return "Integration by Parts"
-        elif any(trig in expr for trig in ['sin', 'cos', 'tan', 'sec', 'csc', 'cot']):
+        methods = {
+            'power_rule': 'x**' in expr or 'x^' in expr,
+            'constant': expr.replace(' ', '').isnumeric(),
+            'sum_rule': '+' in expr or '-' in expr,
+            'trig': any(t in expr for t in ['sin', 'cos', 'tan']),
+            'exp': 'exp' in expr or 'e**' in expr
+        }
+        
+        if methods['sum_rule']:
+            return "Sum Rule"
+        elif methods['power_rule']:
+            return "Power Rule"
+        elif methods['constant']:
+            return "Constant Rule"
+        elif methods['trig']:
             return "Trigonometric Integration"
-        elif 'exp' in expr or 'e**' in expr:
+        elif methods['exp']:
             return "Exponential Integration"
-        elif '/' in expr:
-            return "Division Rule"
-        elif '*' in expr:
-            return "Product Rule"
-        else:
-            return "Basic Integration"
+        return "Basic Integration"
 
 solver = IntegralSolver()
 
