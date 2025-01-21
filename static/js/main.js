@@ -7,10 +7,17 @@ function insertSymbol(symbol) {
     input.focus();
 }
 
+function renderLatex(elementId, latex) {
+    const element = document.getElementById(elementId);
+    katex.render(latex, element, {
+        displayMode: true,
+        throwOnError: false
+    });
+}
+
 async function solveIntegral() {
     const expression = document.getElementById('expression').value;
     const resultDiv = document.getElementById('result');
-    const solutionSteps = document.querySelector('.solution-steps');
 
     if (!expression) {
         resultDiv.innerHTML = `
@@ -32,20 +39,18 @@ async function solveIntegral() {
         const data = await response.json();
 
         if (data.success) {
-            solutionSteps.classList.remove('d-none');
+            // Render each step with LaTeX
+            renderLatex('step1', `\\text{This is a ${data.method.toLowerCase()} integration problem}`);
             
-            // Display steps
-            document.querySelector('.step-1 .step-content').innerHTML = 
-                `This is a ${data.method.toLowerCase()} integration problem`;
+            // Render the rule application
+            let ruleText = data.steps.join(' \\\\ ');
+            renderLatex('step2', ruleText);
             
-            document.querySelector('.step-2 .step-content').innerHTML = 
-                data.steps.join('<br>');
+            // Render the integration step
+            renderLatex('step3', `\\int ${data.input}`);
             
-            document.querySelector('.step-3 .step-content').innerHTML = 
-                `Integrate: ${data.input}`;
-            
-            document.querySelector('.answer-content').innerHTML = 
-                `${data.result}`;
+            // Render the final answer
+            renderLatex('final', data.result);
         } else {
             resultDiv.innerHTML = `
                 <div class="alert alert-danger">

@@ -33,7 +33,7 @@
                         <label for="expression" class="form-label">Enter Expression:</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="expression" 
-                                   placeholder="Example: x^2 or sin(x)">
+                                   placeholder="Example: x^4">
                             <button class="btn btn-primary" onclick="solveIntegral()">Solve</button>
                         </div>
                         <small class="text-muted">Click symbols above or type expression</small>
@@ -41,23 +41,23 @@
 
                     <!-- Solution Area -->
                     <div id="result" class="mt-4">
-                        <div class="solution-steps d-none">
+                        <div class="solution-steps">
                             <h5>Step by Step Solution:</h5>
-                            <div class="step-1 mb-2">
+                            <div class="step mb-3">
                                 <strong>1. Identify the type:</strong>
-                                <div class="step-content"></div>
+                                <div id="step1" class="latex-render"></div>
                             </div>
-                            <div class="step-2 mb-2">
+                            <div class="step mb-3">
                                 <strong>2. Apply the rule:</strong>
-                                <div class="step-content"></div>
+                                <div id="step2" class="latex-render"></div>
                             </div>
-                            <div class="step-3 mb-2">
+                            <div class="step mb-3">
                                 <strong>3. Solve:</strong>
-                                <div class="step-content"></div>
+                                <div id="step3" class="latex-render"></div>
                             </div>
                             <div class="final-answer mt-3">
                                 <strong>Final Answer:</strong>
-                                <div class="answer-content"></div>
+                                <div id="final" class="latex-render"></div>
                             </div>
                         </div>
                     </div>
