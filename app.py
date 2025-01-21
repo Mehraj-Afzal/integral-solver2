@@ -25,88 +25,63 @@ class IntegralSolver:
 
     def solve_integral(self, expression_str):
         try:
-            # Remove the integral symbol and clean up input
-            expression_str = expression_str.replace('∫', '').strip()
+            # Clean up input
             expression_str = self._preprocess_expression(expression_str)
-            
-            # Convert to sympy expression
             expression = sp.sympify(expression_str)
             
             # Calculate integral
             result = sp.integrate(expression, self.x)
             
-            # Generate solution steps
-            steps = self._generate_steps(expression, result)
+            # Generate formatted steps
+            steps = self._generate_formatted_steps(expression, result)
             
             return {
                 "success": True,
-                "input": f"∫ {expression} dx",
+                "input": f"∫ {latex(expression)} dx",
                 "steps": steps,
-                "result": f"{result} + C",
-                "latex_result": f"{latex(result)} + C",
+                "result": latex(result) + " + C",
                 "method": self._determine_integration_method(expression_str)
             }
         except Exception as e:
             logger.error(f"Error solving integral: {str(e)}")
             return {
                 "success": False,
-                "error": f"Error: Please enter a valid expression (e.g., x^2 or sin(x))"
+                "error": "Please enter a valid expression (e.g., x^2 or sin(x))"
             }
 
-    def _generate_steps(self, expression, result):
+    def _generate_formatted_steps(self, expression, result):
         steps = []
         
-        # For sum of terms
-        if isinstance(expression, sp.Add):
+        if isinstance(expression, sp.Pow) and expression.base == self.x:
+            power = expression.exp
+            steps.append(f"For ∫x^{latex(power)}dx:")
+            steps.append(f"Using power rule: ∫x^n dx = \\frac{{x^{{n+1}}}}{{n+1}}")
+            steps.append(f"Here, n = {latex(power)}")
+            steps.append(f"Therefore, ∫x^{latex(power)}dx = \\frac{{x^{latex(power+1)}}}{{{latex(power+1)}}} + C")
+        
+        elif isinstance(expression, sp.Add):
             steps.append("Using sum rule: ∫(f(x) + g(x))dx = ∫f(x)dx + ∫g(x)dx")
             for term in expression.args:
                 term_result = sp.integrate(term, self.x)
-                if term.is_number:
-                    steps.append(f"∫{term}dx = {term}x (Constant rule)")
-                elif term.is_Pow and self.x in term.free_symbols:
-                    base, exp = term.args
-                    if base == self.x:
-                        steps.append(f"∫x^{exp}dx = x^{exp+1}/{exp+1} (Power rule)")
-                
-        # For single term
-        else:
-            if expression.is_number:
-                steps.append(f"Using constant rule: ∫kdx = kx")
-            elif expression.is_Pow and self.x in expression.free_symbols:
-                base, exp = expression.args
-                if base == self.x:
-                    steps.append(f"Using power rule: ∫x^ndx = x^(n+1)/(n+1)")
+                steps.append(f"∫{latex(term)}dx = {latex(term_result)}")
         
-        steps.append(f"Final result: {result} + C")
         return steps
 
     def _preprocess_expression(self, expr):
-        # Clean up the input expression
+        expr = expr.replace('∫', '').strip()
         expr = expr.replace('^', '**')
-        expr = expr.replace('e**x', 'exp(x)')
-        expr = expr.replace('e^x', 'exp(x)')
-        expr = expr.replace('dx', '')  # Remove dx if present
+        expr = expr.replace('dx', '')
         return expr.strip()
 
     def _determine_integration_method(self, expr):
         expr = expr.lower()
-        methods = {
-            'power_rule': 'x**' in expr or 'x^' in expr,
-            'constant': expr.replace(' ', '').isnumeric(),
-            'sum_rule': '+' in expr or '-' in expr,
-            'trig': any(t in expr for t in ['sin', 'cos', 'tan']),
-            'exp': 'exp' in expr or 'e**' in expr
-        }
-        
-        if methods['sum_rule']:
-            return "Sum Rule"
-        elif methods['power_rule']:
+        if '**' in expr or '^' in expr:
             return "Power Rule"
-        elif methods['constant']:
-            return "Constant Rule"
-        elif methods['trig']:
+        elif '+' in expr or '-' in expr:
+            return "Sum Rule"
+        elif any(t in expr for t in ['sin', 'cos', 'tan']):
             return "Trigonometric Integration"
-        elif methods['exp']:
+        elif 'exp' in expr or 'e**' in expr:
             return "Exponential Integration"
         return "Basic Integration"
 
