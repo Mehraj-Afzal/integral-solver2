@@ -1,10 +1,20 @@
+function insertSymbol(symbol) {
+    const input = document.getElementById('expression');
+    const cursorPos = input.selectionStart;
+    const textBefore = input.value.substring(0, cursorPos);
+    const textAfter = input.value.substring(cursorPos);
+    input.value = textBefore + symbol + textAfter;
+    input.focus();
+}
+
 async function solveIntegral() {
     const expression = document.getElementById('expression').value;
     const resultDiv = document.getElementById('result');
+    const solutionSteps = document.querySelector('.solution-steps');
 
     if (!expression) {
         resultDiv.innerHTML = `
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning">
                 Please enter an expression
             </div>`;
         return;
@@ -22,43 +32,37 @@ async function solveIntegral() {
         const data = await response.json();
 
         if (data.success) {
-            resultDiv.innerHTML = `
-                <div class="alert alert-success" role="alert">
-                    <h5>Input:</h5>
-                    <div class="mb-2">${data.input}</div>
-                    <h5>Result:</h5>
-                    <div class="mb-2">${data.result}</div>
-                    <h5>Method:</h5>
-                    <div>${data.method}</div>
-                </div>`;
+            solutionSteps.classList.remove('d-none');
+            
+            // Display steps
+            document.querySelector('.step-1 .step-content').innerHTML = 
+                `This is a ${data.method.toLowerCase()} integration problem`;
+            
+            document.querySelector('.step-2 .step-content').innerHTML = 
+                data.steps.join('<br>');
+            
+            document.querySelector('.step-3 .step-content').innerHTML = 
+                `Integrate: ${data.input}`;
+            
+            document.querySelector('.answer-content').innerHTML = 
+                `${data.result}`;
         } else {
             resultDiv.innerHTML = `
-                <div class="alert alert-danger" role="alert">
+                <div class="alert alert-danger">
                     ${data.error}
                 </div>`;
         }
     } catch (error) {
         resultDiv.innerHTML = `
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger">
                 An error occurred while processing your request
             </div>`;
     }
 }
 
-function showExamples() {
-    const resultDiv = document.getElementById('result');
-    resultDiv.innerHTML = `
-        <div class="example-box">
-            <h5>Example Inputs:</h5>
-            <ul>
-                <li>Basic: x^2, 2*x + 3</li>
-                <li>Trigonometric: sin(x), cos(x), tan(x)</li>
-                <li>Exponential: exp(x), e^x</li>
-                <li>Integration by Parts: x*sin(x), x*exp(x)</li>
-                <li>Logarithmic: log(x), 1/x</li>
-            </ul>
-            <p><strong>Note:</strong> Use ^ for powers, * for multiplication</p>
-        </div>`;
+function toggleExamples() {
+    const examples = document.getElementById('examples');
+    examples.classList.toggle('d-none');
 }
 
 // Add Enter key support
