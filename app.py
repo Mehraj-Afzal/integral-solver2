@@ -25,9 +25,14 @@ class IntegralSolver:
 
     def solve_integral(self, expression_str):
         try:
-            logger.info(f"Attempting to solve integral: {expression_str}")
+            # Remove the integral symbol and clean up input
+            expression_str = expression_str.replace('∫', '').strip()
             expression_str = self._preprocess_expression(expression_str)
+            
+            # Convert to sympy expression
             expression = sp.sympify(expression_str)
+            
+            # Calculate integral
             result = sp.integrate(expression, self.x)
             
             # Generate solution steps
@@ -45,7 +50,7 @@ class IntegralSolver:
             logger.error(f"Error solving integral: {str(e)}")
             return {
                 "success": False,
-                "error": f"Error: {str(e)}"
+                "error": f"Error: Please enter a valid expression (e.g., x^2 or sin(x))"
             }
 
     def _generate_steps(self, expression, result):
@@ -76,11 +81,12 @@ class IntegralSolver:
         return steps
 
     def _preprocess_expression(self, expr):
+        # Clean up the input expression
         expr = expr.replace('^', '**')
         expr = expr.replace('e**x', 'exp(x)')
         expr = expr.replace('e^x', 'exp(x)')
-        expr = expr.replace('ln(', 'log(')
-        return expr
+        expr = expr.replace('dx', '')  # Remove dx if present
+        return expr.strip()
 
     def _determine_integration_method(self, expr):
         expr = expr.lower()
