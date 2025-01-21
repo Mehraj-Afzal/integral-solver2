@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="text-center mb-0">Integral Solver</h2>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label for="expression" class="form-label">Enter Expression:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="expression" 
+                                   placeholder="e.g., x^2, sin(x), exp(x)">
+                            <button class="btn btn-primary" onclick="solveIntegral()">Solve</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <select class="form-select" id="methodSelect">
+                            <option selected>Select Integration Method</option>
+                            <option value="basic">Basic Integration</option>
+                            <option value="parts">Integration by Parts</option>
+                            <option value="trig">Trigonometric</option>
+                            <option value="exp">Exponential</option>
+                        </select>
+                    </div>
+
+                    <div id="result" class="mt-4">
+                        <div class="alert alert-info" role="alert">
+                            Results will appear here
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button class="btn btn-secondary" onclick="showExamples()">
+                            Show Examples
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
