@@ -46,8 +46,8 @@ async function solveIntegral() {
             let ruleText = data.steps.join(' \\\\ ');
             renderLatex('step2', ruleText);
             
-            // Render the integration step
-            renderLatex('step3', `\\int ${data.input}`);
+            // Render the integration step with single integral
+            renderLatex('step3', `\\int ${data.input.replace('∫', '')}`);
             
             // Render the final answer
             renderLatex('final', data.result);
